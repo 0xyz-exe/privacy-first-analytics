@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: privacy-first-analytics
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-replace-with-a-secure-random-jwt-key-minimum-32-chars}
+      - PRIVACY_SALT=${PRIVACY_SALT:-replace-with-a-secure-daily-rotating-salt-for-visitor-hashing}
+      - DATA_DIR=/app/data
+    volumes:
+      - analytics_data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  analytics_data:
+    driver: local
